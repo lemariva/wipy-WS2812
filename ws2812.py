@@ -50,11 +50,11 @@ class WS2812:
         if uname().sysname == 'LoPy':
             self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=(None, dataPin, None))
              # Enable pull down
-	    Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)
+            Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)
 	else: #WiPy
-            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1)
+            self.spi = SPI(0, mode=SPI.MASTER, baudrate=8000000, polarity=0, phase=1)
             # Enable pull down
-            Pin('GP16', mode=Pin.ALT, pull=Pin.PULL_DOWN)
+            Pin('P9', mode=Pin.OUT)
         
         # Turn LEDs off
         self.show([])

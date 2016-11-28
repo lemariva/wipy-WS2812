@@ -53,7 +53,7 @@ class WS2812:
             Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)          # Enable pull down
         elif  uname().machine == 'WiPy with ESP32':
             self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=None)       
-            Pin('P10', mode=Pin.OUT, pull=Pin.PULL_DOWN, alt=10)   # Enable pull down
+            Pin('P11', mode=Pin.OUT, pull=Pin.PULL_DOWN, alt=10)   # Enable pull down
         
         # Turn LEDs off
         self.show([])

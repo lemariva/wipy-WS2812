@@ -3,11 +3,11 @@
 # Adapted for LoPy by @aureleq
 
 import gc
+from uos import uname
 from machine import SPI
 from machine import Pin
 from machine import disable_irq
 from machine import enable_irq
-from uos import uname
 
 class WS2812:
     """
@@ -47,14 +47,13 @@ class WS2812:
         # SPI init
         # Bus 0, 8MHz => 125 ns by bit, 8 clock cycle when bit transfert+2 clock cycle between each transfert
         # => 125*10=1.25 us required by WS2812
+        
         if uname().sysname == 'LoPy':
-            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=(None, dataPin, None))
-             # Enable pull down
-            Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)
-	else: #WiPy
-            self.spi = SPI(0, mode=SPI.MASTER, baudrate=8000000, polarity=0, phase=1)
-            # Enable pull down
-            Pin('P9', mode=Pin.OUT)
+            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=(None, dataPin, None))            
+            Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)          # Enable pull down
+        elif  uname().machine == 'WiPy with ESP32':
+            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=None)       
+            Pin('P10', mode=Pin.OUT, pull=Pin.PULL_DOWN, alt=10)   # Enable pull down
         
         # Turn LEDs off
         self.show([])
@@ -140,4 +139,3 @@ class WS2812:
         Set brighness of all leds
         """
         self.brightness = brightness
-

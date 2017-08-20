@@ -46,7 +46,7 @@ More info & Help
 
 WiPy 2.0 firmware update: https://docs.pycom.io/pycom_esp32/pycom_esp32/firmware.html#firmware-upgrade
 
-WiPy 2.0 hardware pinout: https://docs.pycom.io/pycom_esp32/pycom_esp32/wipy2.html
+WiPy 2.0 hardware pinout: https://www.pycom.io/wp-content/uploads/2016/11/wipy_pinout.pdf
 
 You can check more about the MicroPython project here: http://micropython.org
 

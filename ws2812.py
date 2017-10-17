@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Based on https://github.com/JanBednarik/micropython-ws2812
 # Adapted for LoPy by @aureleq
+# Adapted for WiPy by Johannes Gaa & Mauro Riva (lemariva.com)
+# Adapted for Wemos by Mauro Riva (lemariva.com)
 
 import gc
 from uos import uname
@@ -47,14 +49,18 @@ class WS2812:
         # SPI init
         # Bus 0, 8MHz => 125 ns by bit, 8 clock cycle when bit transfert+2 clock cycle between each transfert
         # => 125*10=1.25 us required by WS2812
-        
-        if uname().sysname == 'LoPy':
-            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=(None, dataPin, None))            
-            Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)          # Enable pull down
-        elif  uname().machine == 'WiPy with ESP32':
-            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=None)       
-            Pin('P11', mode=Pin.OUT, pull=Pin.PULL_DOWN, alt=10)   # Enable pull down
-        
+        if uname().sysname == 'LoPy':   # LoPy
+            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=(None, dataPin, None))
+            Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)
+        elif  uname().machine == 'WiPy with ESP32': # Wipy 2.0
+            self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=None)
+            Pin('P11', mode=Pin.OUT, pull=Pin.PULL_DOWN, alt=10)
+        elif uname().machine == 'ESP32 module with ESP32': # Wemos ESP-WROOM-32
+            mosi = Pin(23, mode = Pin.OUT, pull=Pin.PULL_DOWN)
+            miso = Pin(19, mode = Pin.IN)
+            sck =  Pin(18, mode = Pin.OUT, pull=Pin.PULL_DOWN)
+            self.spi = SPI(1, baudrate=8000000, polarity=0, phase=1, sck = sck, mosi = mosi, miso = miso)
+
         # Turn LEDs off
         self.show([])
 
@@ -71,9 +77,11 @@ class WS2812:
         """
         Send buffer over SPI.
         """
-        disable_irq()
+        if uname().machine != 'ESP32 module with ESP32':
+            disable_irq()  # wemos has problems with this
         self.spi.write(self.buf)
-        enable_irq()
+        if uname().machine != 'ESP32 module with ESP32':
+            enable_irq()   # wemos has problems with this
         gc.collect()
 
     def update_buf(self, data, start=0):
@@ -133,7 +141,7 @@ class WS2812:
         for index in range(end * 24, self.buf_length):
             buf[index] = off
             index += 2
-            
+
     def set_brightness(self, brightness):
         """
         Set brighness of all leds

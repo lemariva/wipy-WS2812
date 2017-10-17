@@ -48,7 +48,7 @@ Wipy 2.0:
 * Hardware pinout: https://www.pycom.io/wp-content/uploads/2016/11/wipy_pinout.pdf
 
 Wemos:
-* Wemos Board: https://goo.gl/cpbzui
+* Wemos Board: https://goo.gl/3RCPfm
 * Micropython firmware for ESP32: http://micropython.org/download#esp32
 * Hardware information: http://espressif.com/en/producttype/esp-wroom-32
 

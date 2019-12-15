@@ -32,11 +32,11 @@ class WS2812:
     # Values to put inside SPi register for each color's bit
     buf_bytes = (0xE0E0, 0xFCE0, 0xE0FC, 0xFCFC)
 
-    def __init__(self, ledNumber=1, brightness=100, dataPin='P22'):
+    def __init__(self, ledNumber=1, brightness=1, dataPin='P22'):
         """
         Params:
         * ledNumber = count of LEDs
-        * brightness = light brightness (integer : 0 to 100%)
+        * brightness = light brightness (integer : 0 to 1 > 0-100%)
         * dataPin = pin to connect data channel (LoPy only)
         """
         self.ledNumber = ledNumber
@@ -52,14 +52,19 @@ class WS2812:
         if uname().sysname == 'LoPy':   # LoPy
             self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=(None, dataPin, None))
             Pin(dataPin, mode=Pin.OUT, pull=Pin.PULL_DOWN)
-        elif  uname().machine == 'WiPy with ESP32': # Wipy 2.0
+        elif  uname().machine == 'WiPy with ESP32': # Wipy x.0
             self.spi = SPI(0, SPI.MASTER, baudrate=8000000, polarity=0, phase=1, pins=None)
             Pin('P11', mode=Pin.OUT, pull=Pin.PULL_DOWN, alt=10)
         elif uname().machine == 'ESP32 module with ESP32': # Wemos ESP-WROOM-32
-            mosi = Pin(23, mode = Pin.OUT, pull=Pin.PULL_DOWN)
-            miso = Pin(19, mode = Pin.IN)
-            sck =  Pin(18, mode = Pin.OUT, pull=Pin.PULL_DOWN)
-            self.spi = SPI(1, baudrate=8000000, polarity=0, phase=1, sck = sck, mosi = mosi, miso = miso)
+            mosi = Pin(23, mode=Pin.OUT, pull=Pin.PULL_DOWN)
+            miso = Pin(19, mode=Pin.IN)
+            sck = Pin(18, mode=Pin.OUT, pull=Pin.PULL_DOWN)
+            self.spi = SPI(1, baudrate=8000000, polarity=0, phase=1, sck=sck, mosi=mosi, miso=miso)
+        elif uname().machine == 'ESP32 board with ESP32': # M5Stack
+            mosi = Pin(21, mode=Pin.OUT, pull=Pin.PULL_UP)
+            miso = Pin(19, mode=Pin.IN)
+            sck = Pin(18, mode=Pin.OUT, pull=Pin.PULL_DOWN)
+            self.spi = SPI(1, baudrate=8000000, polarity=0, phase=1, sck=sck, mosi=mosi, miso=miso)
 
         # Turn LEDs off
         self.show([])
@@ -77,36 +82,28 @@ class WS2812:
         """
         Send buffer over SPI.
         """
-        if uname().machine != 'ESP32 module with ESP32':
-            disable_irq()  # wemos has problems with this
         self.spi.write(self.buf)
-        if uname().machine != 'ESP32 module with ESP32':
-            enable_irq()   # wemos has problems with this
         gc.collect()
 
     def update_buf(self, data, start=0):
         """
         Fill a part of the buffer with RGB data.
-
         Order of colors in buffer is changed from RGB to GRB because WS2812 LED
         has GRB order of colors. Each color is represented by 4 bytes in buffer
         (1 byte for each 2 bits).
-
         Returns the index of the first unfilled LED
-
         Note: If you find this function ugly, it's because speed optimisations
         beated purity of code.
         """
-
         buf = self.buf
         buf_bytes = self.buf_bytes
         brightness = self.brightness
-
         index = start * 24
+
         for red, green, blue in data:
-            red = int(red * brightness // 100)
-            green = int(green * brightness // 100)
-            blue = int(blue * brightness // 100)
+            red = int(red - red * (1 - brightness))
+            green = int(green - green * (1 - brightness))
+            blue = int(blue - blue * (1 - brightness))
 
             buf[index] = buf_bytes[green >> 6 & 0x03]
             buf[index+2] = buf_bytes[green >> 4 & 0x03]
@@ -130,7 +127,6 @@ class WS2812:
     def fill_buf(self, data):
         """
         Fill buffer with RGB data.
-
         All LEDs after the data are turned off.
         """
         end = self.update_buf(data)
